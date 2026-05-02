@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FUEL AI // TITAN V4.1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;700&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --surface: rgba(15, 15, 15, 0.8);
+            --accent: #c8f542;
+            --accent-glow: rgba(200, 245, 66, 0.3);
+            --blue: #00f2ff;
+            --blue-glow: rgba(0, 242, 255, 0.3);
+            --text: #ffffff;
+            --muted: #222;
+            --glass-border: rgba(255, 255, 255, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Space Grotesk', sans-serif; 
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* HIGH-END BACKGROUND */
+        .bg-lines { 
+            position: fixed; 
+            inset: 0; 
+            background: radial-gradient(circle at 50% 50%, #111 0%, #000 100%); 
+            z-index: -1; 
+        }
+        .bg-lines::after { 
+            content: ""; 
+            position: absolute; 
+            inset: 0; 
+            background-image: linear-gradient(var(--glass-border) 1px, transparent 1px), 
+                              linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+        }
+
+        .container { max-width: 450px; margin: 0 auto; padding: 20px; position: relative; }
+
+        /* TYPOGRAPHY */
+        h1 { 
+            font-family: 'Bebas Neue'; 
+            font-size: 90px; 
+            color: var(--accent); 
+            line-height: 0.85; 
+            letter-spacing: -2px; 
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+        .sub-header { 
+            font-family: 'JetBrains Mono'; 
+            font-size: 11px; 
+            color: var(--accent); 
+            letter-spacing: 5px; 
+            margin-bottom: 25px; 
+            opacity: 0.8;
+        }
+
+        /* PREMIUM GLASS CARDS */
+        .titan-card { 
+            background: var(--surface); 
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px; 
+            padding: 25px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            transition: all 0.4s ease;
+        }
+        .titan-card:focus-within { 
+            border-color: var(--accent); 
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        label { font-family: 'Bebas Neue'; font-size: 18px; color: #888; display: block; margin-bottom: 8px; }
+        
+        input, select {
+            width: 100%; background: rgba(0,0,0,0.4); border: 1px solid #333; padding: 18px; border-radius: 15px; 
+            color: var(--accent); font-family: 'JetBrains Mono'; font-size: 16px; margin-bottom: 15px; outline: none;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); background: rgba(0,0,0,0.6); }
+
+        /* BUTTONS */
+        .btn-titan { 
+            width: 100%; padding: 25px; border-radius: 20px; border: none; 
+            font-family: 'Bebas Neue'; font-size: 28px; cursor: pointer; 
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            text-transform: uppercase; 
+        }
+        .btn-main { 
+            background: var(--accent); color: #000; 
+            box-shadow: 0 10px 30px var(--accent-glow); 
+            position: relative; overflow: hidden;
+        }
+        .btn-main:active { transform: scale(0.96); }
+
+        /* DASHBOARD DATA */
+        .big-val { font-family: 'Bebas Neue'; font-size: 110px; line-height: 0.9; margin: 5px 0; text-shadow: 0 0 15px rgba(255,255,255,0.1); }
+        .stat-box { 
+            background: var(--surface); 
+            padding: 20px; 
+            border-radius: 25px; 
+            border: 1px solid var(--glass-border); 
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+        .stat-box.water { border-left: 4px solid var(--blue); }
+        .stat-box.protein { border-left: 4px solid var(--accent); }
+
+        /* LOADING SCANNER */
+        #loading { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 999; 
+            display: none; align-items: center; justify-content: center; flex-direction: column; 
+            backdrop-filter: blur(20px);
+        }
+        .scanner-line {
+            width: 100%; height: 2px; background: var(--accent);
+            position: absolute; top: 0; box-shadow: 0 0 15px var(--accent);
+            animation: scanMove 2s infinite linear;
+        }
+        @keyframes scanMove { 0% { top: 0% } 100% { top: 100% } }
+
+        .page { display: none; animation: pageIn 0.5s ease-out; }
+        .page.active { display: flex; flex-direction: column; }
+        @keyframes pageIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .supp-btn { 
+            flex: 1; background: rgba(255,255,255,0.05); border: 1px solid #333; 
+            padding: 12px 5px; border-radius: 12px; font-family: 'Bebas Neue'; 
+            font-size: 14px; color: #555; cursor: pointer; transition: 0.3s;
+        }
+        .supp-btn.active { color: #000; background: var(--accent); border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+    </style>
+</head>
+<body>
+
+<div class="bg-lines"></div>
+
+<div id="loading">
+    <div class="scanner-line"></div>
+    <h1 style="font-size: 40px;">BIO-SCANNING</h1>
+    <p style="font-family: 'JetBrains Mono'; color: var(--accent);">EXTRACTING MACRONUTRIENTS...</p>
+</div>
+
+<div class="container">
+    <div id="setupPage" class="page active">
+        <div class="sub-header">CORE_INIT // V4.1</div>
+        <h1>TITAN<br>PROTOCOL</h1>
+        
+        <div class="titan-card">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label>WEIGHT (LBS)</label>
+                    <input type="number" id="weight" value="180">
+                </div>
+                <div>
+                    <label>AGE</label>
+                    <input type="number" id="age" value="25">
+                </div>
+            </div>
+
+            <label>HEIGHT</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <input type="number" id="ft" value="5" placeholder="FT">
+                <input type="number" id="in" value="9" placeholder="IN">
+            </div>
+
+            <label>ACTIVITY PROFILE</label>
+            <select id="activity">
+                <option value="1.2">SEDENTARY (LOW THERMIC)</option>
+                <option value="1.55">ACTIVE (HIGH OUTPUT)</option>
+                <option value="1.9">ELITE (CONSTANT STRAIN)</option>
+            </select>
+            
+            <input type="hidden" id="gender" value="male">
+        </div>
+
+        <button class="btn-titan btn-main" onclick="initTitan()">ACTIVATE SYSTEM →</button>
+    </div>
+
+    <div id="dashPage" class="page">
+        <div class="sub-header">SYSTEM_LIVE // TELEMETRY</div>
+        
+        <div class="titan-card" style="text-align: center; background: transparent; border: none; box-shadow: none;">
+            <label style="letter-spacing: 3px;">DAILY ENERGY EXPENDITURE</label>
+            <div class="big-val"><span id="currCal">0</span><span style="color: #333; font-size: 30px;"> / <span id="goalCal">2500</span></span></div>
+            <div id="logicText" style="font-size: 10px; color: var(--accent); font-family: 'JetBrains Mono'; opacity: 0.6; text-transform: uppercase;"></div>
+        </div>
+
+        <div class="grid-stats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div class="stat-box protein">
+                <label style="font-size: 14px; color: var(--accent);">PROTEIN</label>
+                <div class="big-val" style="font-size: 45px; margin: 0;"><span id="currP">0</span><span style="font-size: 15px; color: #444;">G</span></div>
+            </div>
+            <div class="stat-box water">
+                <label style="font-size: 14px; color: var(--blue);">HYDRATION</label>
+                <div class="big-val" style="font-size: 45px; margin: 0;"><span id="currW">0</span><span style="font-size: 15px; color: #444;">OZ</span></div>
+            </div>
+        </div>
+
+        <div class="titan-card">
+            <label style="font-size: 14px; margin-bottom: 15px; letter-spacing: 2px;">SUPPLEMENT STACK</label>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-whey" class="supp-btn" onclick="logSupp('whey', 25)">WHEY</button>
+                <button id="btn-crea" class="supp-btn" onclick="logSupp('crea', 5)">CREATINE</button>
+                <button id="btn-coll" class="supp-btn" onclick="logSupp('coll', 10)">COLLAGEN</button>
+                <button class="supp-btn" style="color: var(--blue); border-color: var(--blue-glow);" onclick="addWater(16)">+16OZ</button>
+            </div>
+        </div>
+
+        <button class="btn-titan btn-main" onclick="triggerScan()">📸 SCAN BIO-MATTER</button>
+        
+        <div id="log" style="margin-top: 20px; font-family: 'JetBrains Mono'; font-size: 10px; color: #555; line-height: 1.5;"></div>
+    </div>
+</div>
+
+<script>
+    // Note: Use your actual Gemini API Key here
+    const API_KEY = AIzaSyAqSSuwb3TGdKMeDOZhVF3jrXqYA0eAbcs; 
+    let stats = { cal: 0, p: 0, water: 0, goal: 2000, stack: { whey: false, crea: false, coll: false } };
+
+    function initTitan() {
+        const w = parseFloat(document.getElementById('weight').value);
+        const f = parseFloat(document.getElementById('ft').value);
+        const i = parseFloat(document.getElementById('in').value);
+        const a = parseFloat(document.getElementById('age').value);
+        
+        if(!w || !f || !a) return;
+
+        const cm = ((f * 12) + i) * 2.54;
+        const kg = w * 0.453592;
+        let bmr = (10 * kg) + (6.25 * cm) - (5 * a) + 5;
+        
+        const activity = parseFloat(document.getElementById('activity').value);
+        stats.goal = Math.round(bmr * activity);
+
+        document.getElementById('goalCal').innerText = stats.goal;
+        document.getElementById('logicText').innerText = `METABOLIC TARGET LOCKED // OPTIMIZING FOR HYPERTROPHY`;
+        
+        document.getElementById('setupPage').classList.remove('active');
+        document.getElementById('dashPage').classList.add('active');
+    }
+
+    function addWater(amt) {
+        stats.water += amt;
+        updateUI();
+    }
+
+    function logSupp(type, protein) {
+        if (!stats.stack[type]) {
+            stats.p += protein;
+            stats.cal += (protein * 4);
+            stats.stack[type] = true;
+            document.getElementById(`btn-${type}`).classList.add('active');
+            updateUI();
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('currCal').innerText = Math.round(stats.cal);
+        document.getElementById('currP').innerText = Math.round(stats.p);
+        document.getElementById('currW').innerText = stats.water;
+    }
+
+    function triggerScan() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = e => analyze(e.target.files[0]);
+        input.click();
+    }
+
+    async function analyze(file) {
+        if (!file) return;
+        document.getElementById('loading').style.display = 'flex';
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const base64 = reader.result.split(',')[1];
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                {text: "Identify the food in this image. Estimate calories and protein. Return ONLY JSON: {\"name\":\"string\",\"cal\":number,\"p\":number}"},
+                                {inline_data: {mime_type: "image/jpeg", data: base64}}
+                            ]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                const rawText = data.candidates[0].content.parts[0].text;
+                const json = JSON.parse(rawText.match(/\{.*\}/s)[0]);
+
+                stats.cal += json.cal;
+                stats.p += json.p;
+                updateUI();
+                const log = document.getElementById('log');
+                log.innerHTML = `> SCAN_SUCCESS: ${json.name.toUpperCase()} [${json.cal}KCAL / ${json.p}G P]<br>` + log.innerHTML;
+
+            } catch (err) {
+                alert("LINK ERROR // SENSOR OVERLOAD");
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+</script>
+</body>
+</html>
